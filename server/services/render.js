@@ -52,4 +52,3 @@ exports.purchase= function(req, res) {
             res.send(err);
         })
 }
-

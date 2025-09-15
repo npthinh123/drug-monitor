@@ -1,12 +1,19 @@
+
+const e = require('express');
 let Drugdb = require('../model/model');
+
 
 
 // creates and saves a new drug
 exports.create = (req,res)=>{
-    // validate incoming request
+    // Nếu middleware validation trả về lỗi, nó sẽ trả về res.status(400).json({ errors })
+    // Ta kiểm tra nếu là lỗi validation thì render lại trang với errors
+    if (res.statusCode === 400 && res.get('Content-Type') === 'application/json' && req.body && req.body.errors) {
+        return res.status(400).render('add_drug', { errors: req.body.errors });
+    }
+
     if(!req.body){// if content of request (form data) is empty
-        res.status(400).send({ message : "Content cannot be emtpy!"});// respond with this
-        return;
+        return res.status(400).render('add_drug', { errors: ["Content cannot be empty!"] });
     }
 
     //create new drug
@@ -20,14 +27,19 @@ exports.create = (req,res)=>{
 
     //save created drug to database
     drug
-        .save(drug)//use the save operation on drug
+        .save(drug)
         .then(data => {
-            console.log(`${data.name} added to the database`) 
-            res.redirect('/manage');
-        })
-        .catch(err =>{
-            res.status(500).send({//catch error
-                message : err.message || "There was an error while adding the drug"
+            console.log(`${data.name} added to the database`);
+            req.headers.accept && req.headers.accept.includes('text/html')
+                ? res.redirect('/manage')
+                : res.status(201).json({
+                    message: "Drug added successfully!",
+                    createdrug: data
+                });
+        })  
+        .catch(err => {
+            res.status(500).render('add_drug', {
+                errors: [err.message || "There was an error while adding the drug"]
             });
         });
 
@@ -65,29 +77,31 @@ exports.find = (req,res)=>{
 
 
 // edits a drug selected using its  ID
+
 exports.update = (req,res)=>{
-    if(!req.body){
-        return res
-            .status(400)
-            .send({ message : "Cannot update an empty drug"})
+    // Nếu req.body là object rỗng hoặc undefined
+    if (!req.body || (typeof req.body === 'object' && Object.keys(req.body).length === 0)) {
+        return res.status(400).send({ message: "Cannot update an empty drug. Make sure to set 'Content-Type: application/json' and send a valid JSON body." });
     }
 
     const id = req.params.id;
-    Drugdb.findByIdAndUpdate(id, req.body, { useFindAndModify: false})
+    // new: true để trả về dữ liệu đã cập nhật
+    Drugdb.findByIdAndUpdate(id, req.body, { useFindAndModify: false, new: true })
         .then(data => {
-            if(!data){
-                res.status(404).send({ message : `Drug with id: ${id} cannot be updated`})
-            }else{
-                res.send(data);
-                //res.redirect('/');
+            if (!data) {
+                res.status(404).send({ message: `Drug with id: ${id} cannot be updated` });
+            } else {
+                res.send({
+                    message: "Drug updated successfully!",
+                    updatedDrug: data
+                });
             }
         })
-        .catch(err =>{
-            res.status(500).send({ message : "Error in updating drug information"})
-        })
+        .catch(err => {
+            res.status(500).send({ message: err.message || "Error in updating drug information" });
+        });
 
 }
-
 
 // deletes a drug using its drug ID
 exports.delete = (req,res)=>{

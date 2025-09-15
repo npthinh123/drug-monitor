@@ -6,7 +6,31 @@ $("#add_drug").submit(function(event){//on a submit event on the element with id
     alert($("#name").val() + " sent successfully!");//alert this in the browser
 })
 
-
+// $("#add_drug").submit(function(event){
+//     event.preventDefault();
+//     var unindexed_array = $(this).serializeArray();
+//     var data = {};
+//     $.map(unindexed_array, function(n, i){
+//         data[n['name']] = n['value'];
+//     });
+//     var request = {
+//         "url" : `http://${url}/api/drugs`,
+//         "method" : "POST",
+//         "data" : data
+//     };
+//     $.ajax(request)
+//         .done(function(response){
+//             alert(data.name + " sent successfully!");
+//             window.location.href = "/manage";
+//         })
+//         .fail(function(xhr){
+//             if(xhr.responseJSON && xhr.responseJSON.errors){
+//                 alert("Lỗi: " + xhr.responseJSON.errors.join("\\n"));
+//             }else{
+//                 alert("Đã xảy ra lỗi không xác định!");
+//             }
+//         });
+// });
 
 $("#update_drug").submit(function(event){// on clicking submit
     event.preventDefault();//prevent default submit behaviour
@@ -21,7 +45,7 @@ $("#update_drug").submit(function(event){// on clicking submit
 
 
     var request = {//use a put API request to use data from above to replace what's on database
-    "url" : `https://${url}/api/drugs/${data.id}`,
+    "url" : `http://${url}/api/drugs/${data.id}`,
     "method" : "PUT",
     "data" : data
 }
@@ -39,7 +63,7 @@ if(window.location.pathname == "/manage"){//since items are listed on manage
         let id = $(this).attr("data-id") // pick the value from the data-id
 
         let request = {//save API request in variable
-            "url" : `https://${url}/api/drugs/${id}`,
+            "url" : `http://${url}/api/drugs/${id}`,
             "method" : "DELETE"
         }
 
